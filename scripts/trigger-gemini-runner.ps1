@@ -77,12 +77,15 @@ Write-Host "  Started   : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Foreground
 Write-Host "========================================" -ForegroundColor DarkCyan
 Write-Host ""
 
-# --- Launch Gemini CLI ---
+# --- Launch Gemini CLI in interactive TUI mode ---
+# Uses -i (--prompt-interactive) to execute initial prompt AND keep TUI open.
+# This is the equivalent of Claude Code's positional arg: `claude "prompt"`.
+# --prompt would run headless (non-interactive) which hides the TUI.
 Write-Host "[Launch] Starting Gemini CLI with prompt..." -ForegroundColor Yellow
-Write-Host "  Session will appear below. Type /quit or Ctrl+C when done." -ForegroundColor Gray
+Write-Host "  TUI will appear below. Type /quit or Ctrl+C when done." -ForegroundColor Gray
 Write-Host ""
 
-& $geminiPath --prompt $PromptText --yolo
+& $geminiPath -i $PromptText --yolo
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor DarkCyan

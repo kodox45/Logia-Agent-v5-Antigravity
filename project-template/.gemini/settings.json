@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$GEMINI_PROJECT_DIR/.gemini/hooks/validate-draft.sh\"",
+            "command": "\"C:/Program Files/Git/bin/bash.exe\" \"$GEMINI_PROJECT_DIR/.gemini/hooks/validate-draft.sh\"",
             "name": "Validate proposal and implementation output",
             "timeout": 60000
           }
