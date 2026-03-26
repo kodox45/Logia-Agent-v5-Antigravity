@@ -23,8 +23,9 @@ You trigger Gemini CLI to generate prototypes, present results to the user, coll
 |------|---------|
 | `view_file(AbsolutePath)` | Read file content (max 800 lines per call; use StartLine/EndLine for larger files) |
 | `write_to_file(TargetFile, CodeContent)` | Write/create file (auto-creates parent directories) |
-| `run_command(CommandLine, Cwd, SafeToAutoRun)` | Execute shell command (trigger Gemini CLI) |
+| `run_command(CommandLine, Cwd, SafeToAutoRun)` | Execute shell command (trigger Gemini CLI, start HTTP server) |
 | `list_dir(DirectoryPath)` | List directory contents |
+| `browser_subagent(TaskName, Task, RecordingName)` | Open agentic browser to preview prototype (spawns Jetski sub-agent) |
 
 ### Tool Call Reference
 
@@ -178,8 +179,8 @@ When user asks about status:
 1. view_file → .gemini/status/prototype-status.json
 
 2. If status.current === "completed":
-   - view_file → prototype/index.html
-   - Display prototype to user
+   - Launch browser preview (see Browser Preview below)
+   - Inform user: "Prototype is ready! Opening preview in the browser..."
 
 3. If status.current === "error":
    - Report error to user
@@ -187,6 +188,51 @@ When user asks about status:
 4. If status.current === "in_progress":
    - Show progress: "Prototype generation: {percentage}% - {step}"
 ```
+
+### Browser Preview (Agentic Browser)
+
+When prototype is ready (status === "completed"), display it in the built-in agentic browser.
+**IMPORTANT: `file://` URLs are blocked** — you MUST serve via HTTP.
+
+**Step 1 — Start HTTP server** (if not already running):
+
+```
+run_command(
+  CommandLine="npx serve -s \"{workspace}/prototype\" -p 3000 --no-clipboard",
+  Cwd="{workspace}",
+  SafeToAutoRun=true,
+  WaitMsBeforeAsync=3000
+)
+```
+
+**Step 2 — Open in agentic browser:**
+
+```
+browser_subagent(
+  TaskName="Preview Prototype",
+  Task="Navigate to http://localhost:3000 and verify the page loads correctly. Take a screenshot of the main screen. Then scroll through the page to check all sections render properly.",
+  RecordingName="prototype_preview"
+)
+```
+
+**Step 3 — Report to user:**
+
+```
+"Prototype preview is open in the browser panel!
+
+You can:
+- See the full interactive prototype in the browser tab
+- Click through screens and test navigation
+- Switch roles using the role switcher
+
+Tell me what you'd like to change, or say 'approved' if it looks good."
+```
+
+**Notes:**
+- The HTTP server runs in background (`WaitMsBeforeAsync=3000` returns control immediately)
+- If port 3000 is busy, try 3001: `npx serve -s "{workspace}/prototype" -p 3001 --no-clipboard`
+- The browser sub-agent (Jetski) will take screenshots and record the session automatically
+- When done with iterations, the HTTP server process will be cleaned up when the terminal closes
 
 ## Design Chunk 8: Review & Iterate
 
@@ -260,7 +306,10 @@ When prototype is ready, display to user and collect feedback.
 
 5. Execute Gemini CLI again (same SAVE `.gemini-prompt` + `wt` fire-and-forget pattern from Design Chunk 7)
 6. Update state: `phases.design.prototype_iterations += 1`
-7. Repeat until user approves
+7. When iteration completes, refresh browser preview:
+   - If HTTP server already running on port 3000, just invoke `browser_subagent` again (server auto-serves updated file)
+   - If server not running, start it first (same Step 1-2 from Browser Preview above)
+8. Repeat until user approves
 
 ### If User Approves
 
