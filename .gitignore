@@ -1,0 +1,15 @@
+# ===== User projects (runtime data, not part of agent repo) =====
+projects/*
+!projects/.gitkeep
+
+# ===== Active project pointer (user-specific state) =====
+active-project.json
+
+# ===== OS files =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== IDE =====
+.vscode/
+.idea/
