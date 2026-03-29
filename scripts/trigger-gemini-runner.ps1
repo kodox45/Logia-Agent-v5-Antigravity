@@ -32,7 +32,7 @@ if (-not $geminiPath) {
 # --- Validate ---
 if (-not $geminiPath) {
     Write-Host "ERROR: Gemini CLI not found." -ForegroundColor Red
-    Write-Host "  Install: npm install -g @anthropic-ai/gemini-cli" -ForegroundColor Red
+    Write-Host "  Install: npm install -g @google/gemini-cli" -ForegroundColor Red
     Write-Host "  Checked: PATH, ~/.local/bin/, LocalAppData, npm global" -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
