@@ -206,31 +206,45 @@ projects/{project_name}/
 
 Write the active project pointer at the repository root. This file persists the active project across Antigravity sessions — ba-resume reads it to recover project context.
 
-**CRITICAL: ALWAYS use `write_to_file` for this file, NEVER use `edit` or `replace_file_content`.** The file may not exist yet — `write_to_file` creates it; `edit` will fail with +0 -0 and hang.
-
-```json
-{
-  "name": "{project_name}",
-  "path": "projects/{project_name}",
-  "activated_at": "{ISO timestamp}"
-}
-```
+**CRITICAL: Use `run_command` with PowerShell to write this file. Do NOT use `write_to_file` or `edit` — they hang on workspace root files due to a known Antigravity/Gemini bug.**
 
 ```
-write_to_file(
-  TargetFile="{repo_root}/active-project.json",
-  CodeContent="{\"name\": \"{project_name}\", \"path\": \"projects/{project_name}\", \"activated_at\": \"{ISO timestamp}\"}",
-  Overwrite=true,
-  Description="Set active project pointer",
-  Complexity=1
+run_command(
+  CommandLine="Set-Content -Path 'active-project.json' -Value '{\"name\": \"{project_name}\", \"path\": \"projects/{project_name}\", \"activated_at\": \"{ISO timestamp}\"}' -Encoding UTF8",
+  Cwd="{repo_root}",
+  SafeToAutoRun=true,
+  WaitMsBeforeAsync=5000
 )
+```
+
+Verify after writing:
+```
+view_file(AbsolutePath="{repo_root}/active-project.json")
 ```
 
 ### Step 4: Initialize state.json
 
-**CRITICAL: ALWAYS use `write_to_file` for this file, NEVER use `edit` or `replace_file_content`.** This is a fresh initialization — overwrite the entire file.
+**CRITICAL: Use `run_command` with PowerShell to write this file. Do NOT use `write_to_file` or `edit` — they can hang due to a known Antigravity/Gemini bug with large JSON files.**
 
-Write this complete template to `{workspace}/.ba/state.json`, replacing `{{PLACEHOLDER}}` values:
+Write the state template via PowerShell. First, construct the full JSON content as a PowerShell here-string, then write it:
+
+```
+run_command(
+  CommandLine="@'\n{FULL_STATE_JSON_CONTENT}\n'@ | Set-Content -Path '.ba/state.json' -Encoding UTF8",
+  Cwd="{workspace}",
+  SafeToAutoRun=true,
+  WaitMsBeforeAsync=5000
+)
+```
+
+Where `{FULL_STATE_JSON_CONTENT}` is the complete state.json template below with all `{{PLACEHOLDER}}` values replaced.
+
+Verify after writing:
+```
+view_file(AbsolutePath="{workspace}/.ba/state.json")
+```
+
+Write this complete template, replacing `{{PLACEHOLDER}}` values:
 
 ```json
 {
