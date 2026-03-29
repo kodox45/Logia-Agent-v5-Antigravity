@@ -206,6 +206,8 @@ projects/{project_name}/
 
 Write the active project pointer at the repository root. This file persists the active project across Antigravity sessions — ba-resume reads it to recover project context.
 
+**CRITICAL: ALWAYS use `write_to_file` for this file, NEVER use `edit` or `replace_file_content`.** The file may not exist yet — `write_to_file` creates it; `edit` will fail with +0 -0 and hang.
+
 ```json
 {
   "name": "{project_name}",
@@ -225,6 +227,8 @@ write_to_file(
 ```
 
 ### Step 4: Initialize state.json
+
+**CRITICAL: ALWAYS use `write_to_file` for this file, NEVER use `edit` or `replace_file_content`.** This is a fresh initialization — overwrite the entire file.
 
 Write this complete template to `{workspace}/.ba/state.json`, replacing `{{PLACEHOLDER}}` values:
 
